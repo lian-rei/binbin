@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Binbin's Travels</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="title-bar">
+        <h1>BINBIN'S TRAVELS</h1>
+      </header>
+
+      <div class="stats-panel" aria-label="Game stats">
+        <div class="stat-block">
+          <span class="label">Score</span>
+          <strong id="scoreValue">0</strong>
+        </div>
+        <div class="stat-block">
+          <span class="label">Food</span>
+          <strong id="foodValue">0 / 0</strong>
+        </div>
+      </div>
+
+      <div class="game-wrap">
+        <canvas id="gameCanvas" width="960" height="540" aria-label="Binbin's Travels"></canvas>
+      </div>
+
+      <div class="hud" aria-label="Keyboard controls">
+        <span>Move: A / D / ← / →</span>
+        <span>Jump: W / ↑ / Space</span>
+        <span>Reset: R</span>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
