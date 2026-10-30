@@ -101,6 +101,10 @@ canvas {
   image-rendering: auto;
 }
 
+.mobile-controls {
+  display: none;
+}
+
 .hud {
   display: flex;
   justify-content: center;
@@ -129,6 +133,53 @@ canvas {
 
   .page-shell {
     padding: 12px 12px 14px;
+  }
+
+  .mobile-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 8px 0;
+    touch-action: none;
+  }
+
+  .touch-stick {
+    position: relative;
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.24);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    touch-action: none;
+    user-select: none;
+  }
+
+  .touch-stick-knob {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 196, 112, 0.9);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  }
+
+  .touch-jump {
+    width: 92px;
+    height: 92px;
+    border: 2px solid rgba(255, 255, 255, 0.24);
+    border-radius: 50%;
+    background: rgba(255, 164, 66, 0.9);
+    color: #0e1725;
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    touch-action: manipulation;
   }
 
   .hud {
