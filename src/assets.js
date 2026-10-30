@@ -18,6 +18,12 @@ export const PLAYER_ANIMATION_SOURCES = {
   DEATH: `${ASSET_ROOT}/binbin/HURT.png`,
 };
 
+export const FOOD_SPRITE_SOURCES = {
+  snack: `${ASSET_ROOT}/food/pastry_bread.png`,
+  rare: `${ASSET_ROOT}/food/eggs_fried.png`,
+  special: `${ASSET_ROOT}/food/canned_soup.png`,
+};
+
 export function loadImage(path) {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -35,6 +41,20 @@ export async function loadPlayerSpriteMap() {
       spriteMap[name] = await loadImage(path);
     } catch (error) {
       console.warn(`Missing player sprite for ${name}:`, error.message);
+    }
+  }
+
+  return spriteMap;
+}
+
+export async function loadFoodSpriteMap() {
+  const spriteMap = {};
+
+  for (const [name, path] of Object.entries(FOOD_SPRITE_SOURCES)) {
+    try {
+      spriteMap[name] = await loadImage(path);
+    } catch (error) {
+      console.warn(`Missing food sprite for ${name}:`, error.message);
     }
   }
 

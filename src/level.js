@@ -13,6 +13,17 @@ export const GRID = {
   groundY: 430,
 };
 
+function mulberry32(seed) {
+  let value = seed >>> 0;
+  return function () {
+    value += 0x6d2b79f5;
+    let t = value;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 function createPlatform({ x, y, width, variant, index, maxHeight, maxLength, buildingId }) {
   return {
     x,
@@ -43,6 +54,11 @@ function createBuilding({
 }) {
   const verticalOffset = 20;
   const roofY = baseY - maxHeight * GRID.storyHeight + verticalOffset;
+  const validBalconyLevels = [...new Set(
+    (balconyLevels ?? [])
+      .filter((storyIndex) => Number.isInteger(storyIndex) && storyIndex > 0 && storyIndex < maxHeight)
+      .map((storyIndex) => Number(storyIndex))
+  )].sort((a, b) => a - b);
 
   const roof = createPlatform({
     x,
@@ -55,7 +71,7 @@ function createBuilding({
     buildingId,
   });
 
-  const floors = balconyLevels.map((storyIndex) =>
+  const floors = validBalconyLevels.map((storyIndex) =>
     createPlatform({
       x,
       y: baseY - storyIndex * GRID.storyHeight + verticalOffset,
@@ -87,66 +103,60 @@ function createBuilding({
   };
 }
 
-export function createLevel() {
+export function createLevel(seed = 1) {
+  const random = mulberry32(seed);
+  const totalWidth = 3200 + Math.floor(random() * 1100);
+  const buildingCount = 7 + Math.floor(random() * 3);
+  const buildings = [];
+  let cursor = 90;
+
+  for (let i = 0; i < buildingCount; i += 1) {
+    const width = 160 + Math.floor(random() * 120);
+    const maxHeight = 2 + Math.floor(random() * 3);
+    const validLevels = Array.from({ length: Math.max(0, maxHeight - 1) }, (_, index) => index + 1);
+    const balconyLevels = [];
+
+    if (validLevels.length > 0) {
+      const lowBalcony = validLevels[Math.floor(random() * validLevels.length)];
+      balconyLevels.push(lowBalcony);
+
+      if (validLevels.length > 1 && random() < 0.8) {
+        const remainingLevels = validLevels.filter((level) => level !== lowBalcony);
+        const secondBalcony = remainingLevels[Math.floor(random() * remainingLevels.length)];
+        balconyLevels.push(secondBalcony);
+      }
+
+      if (validLevels.length > 2 && random() < 0.35) {
+        const remainingLevels = validLevels.filter((level) => !balconyLevels.includes(level));
+        if (remainingLevels.length > 0) {
+          balconyLevels.push(remainingLevels[Math.floor(random() * remainingLevels.length)]);
+        }
+      }
+    }
+
+    const uniqueBalconyLevels = [...new Set(balconyLevels)].sort((a, b) => a - b);
+
+    buildings.push(
+      createBuilding({
+        buildingId: String.fromCharCode(65 + i),
+        x: cursor,
+        width,
+        maxHeight,
+        balconyLevels: uniqueBalconyLevels,
+      })
+    );
+
+    cursor += width + 60 + Math.floor(random() * 180);
+  }
+
+  const finalWidth = Math.max(totalWidth, cursor + 220);
   const ground = {
     x: 0,
     y: GRID.groundY,
-    width: GRID.mapWidth,
+    width: finalWidth,
     height: GRID.mapHeight - GRID.groundY + 36,
     variant: "ground",
   };
-
-  const buildings = [
-    createBuilding({
-      buildingId: "A",
-      x: 80,
-      width: 180,
-      maxHeight: 3,
-      balconyLevels: [],
-    }),
-    createBuilding({
-      buildingId: "B",
-      x: 420,
-      width: 200,
-      maxHeight: 4,
-      balconyLevels: [2],
-    }),
-    createBuilding({
-      buildingId: "C",
-      x: 820,
-      width: 180,
-      maxHeight: 3,
-      balconyLevels: [],
-    }),
-    createBuilding({
-      buildingId: "D",
-      x: 1190,
-      width: 210,
-      maxHeight: 5,
-      balconyLevels: [2],
-    }),
-    createBuilding({
-      buildingId: "E",
-      x: 1610,
-      width: 180,
-      maxHeight: 4,
-      balconyLevels: [2],
-    }),
-    createBuilding({
-      buildingId: "F",
-      x: 2050,
-      width: 190,
-      maxHeight: 4,
-      balconyLevels: [],
-    }),
-    createBuilding({
-      buildingId: "G",
-      x: 2490,
-      width: 200,
-      maxHeight: 5,
-      balconyLevels: [2],
-    }),
-  ];
 
   const platforms = [ground, ...buildings.flatMap((building) => building.platforms)];
 
@@ -156,60 +166,46 @@ export function createLevel() {
     platform.silhouette.y += 20;
   }
 
-  const collectibles = [
-    { x: 150, y: 242, radius: 12, type: "snack" },
-    { x: 520, y: 170, radius: 12, type: "snack" },
-    { x: 540, y: 314, radius: 12, type: "rare" },
-    { x: 860, y: 278, radius: 12, type: "snack" },
-    { x: 930, y: 312, radius: 12, type: "snack" },
-    { x: 1260, y: 244, radius: 12, type: "rare" },
-    { x: 1460, y: 220, radius: 12, type: "snack" },
-    { x: 1710, y: 188, radius: 13, type: "rare" },
-    { x: 2090, y: 222, radius: 12, type: "snack" },
-    { x: 2535, y: 146, radius: 13, type: "special" },
-    { x: 2720, y: 210, radius: 12, type: "snack" },
-    { x: 2860, y: 260, radius: 12, type: "snack" },
-    { x: 2950, y: 304, radius: 12, type: "rare" },
-    { x: 3150, y: 330, radius: 12, type: "snack" },
-    { x: 3320, y: 390, radius: 13, type: "special" },
-  ];
+  const collectibleChoices = ["snack", "snack", "snack", "rare", "rare", "special"];
+  const collectibleCount = 12 + Math.floor(random() * 5);
+  const collectiblePlatforms = platforms.filter((platform) => platform.variant !== "ground");
+  const collectibles = [];
+
+  for (let i = 0; i < collectibleCount; i += 1) {
+    const platform = collectiblePlatforms[Math.floor(random() * collectiblePlatforms.length)];
+    const safePadding = 20;
+    const x = platform.x + safePadding + random() * (platform.width - safePadding * 2);
+    const y = platform.y - 18 - random() * 30;
+    const type = collectibleChoices[Math.floor(random() * collectibleChoices.length)];
+    const radius = type === "special" ? 13 : type === "rare" ? 12 : 11;
+
+    collectibles.push({ x, y, radius, type });
+  }
 
   const background = {
-    clouds: [
-      { x: 120, y: 90, w: 80, h: 30 },
-      { x: 420, y: 120, w: 100, h: 34 },
-      { x: 760, y: 100, w: 90, h: 28 },
-      { x: 1180, y: 82, w: 86, h: 28 },
-      { x: 1550, y: 120, w: 96, h: 30 },
-      { x: 2010, y: 110, w: 90, h: 32 },
-      { x: 2480, y: 96, w: 84, h: 28 },
-      { x: 2910, y: 120, w: 100, h: 32 },
-    ],
-    hills: [
-      { x: 0, y: 385, width: 380, height: 120 },
-      { x: 420, y: 360, width: 360, height: 140 },
-      { x: 820, y: 395, width: 330, height: 110 },
-      { x: 1200, y: 360, width: 380, height: 140 },
-      { x: 1600, y: 390, width: 340, height: 120 },
-      { x: 1980, y: 360, width: 370, height: 140 },
-      { x: 2380, y: 390, width: 330, height: 110 },
-      { x: 2760, y: 360, width: 380, height: 140 },
-      { x: 3160, y: 395, width: 350, height: 110 },
-    ],
-    buildings: [
-      { x: 50, y: 365, width: 120, height: 120, roof: 16 },
-      { x: 220, y: 355, width: 140, height: 130, roof: 18 },
-      { x: 860, y: 358, width: 140, height: 120, roof: 16 },
-      { x: 1240, y: 345, width: 110, height: 135, roof: 18 },
-      { x: 1700, y: 360, width: 150, height: 120, roof: 16 },
-      { x: 2300, y: 350, width: 120, height: 130, roof: 18 },
-      { x: 2860, y: 355, width: 150, height: 120, roof: 16 },
-      { x: 3270, y: 365, width: 120, height: 110, roof: 16 },
-    ],
+    clouds: Array.from({ length: 8 }, (_, index) => ({
+      x: 100 + index * 290 + random() * 120,
+      y: 70 + random() * 75,
+      w: 70 + random() * 60,
+      h: 20 + random() * 18,
+    })),
+    hills: Array.from({ length: 9 }, (_, index) => ({
+      x: index * 360 + random() * 100,
+      y: 355 + random() * 50,
+      width: 240 + random() * 180,
+      height: 90 + random() * 80,
+    })),
+    buildings: Array.from({ length: 8 }, (_, index) => ({
+      x: index * 410 + random() * 120,
+      y: 360 + random() * 26,
+      width: 100 + random() * 80,
+      height: 90 + random() * 90,
+      roof: 12 + Math.floor(random() * 8),
+    })),
   };
 
   return {
-    width: GRID.mapWidth,
+    width: finalWidth,
     height: GRID.mapHeight,
     startX: 20,
     startY: GRID.groundY - 32,
